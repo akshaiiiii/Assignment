@@ -1,0 +1,122 @@
+db.cars.aggregate([
+    {$group:{_id:"$maker",
+    totalcars:{$avg:"$price"}}}
+])
+db.cars.aggregate([
+    {$match:{
+        "maker":"Hyundai",
+        "engine.cc":{$gt:1200}
+    }}
+])
+
+db.cars.find({
+    $and:[
+        {maker:"Hyundai"},
+        {"engine.cc":{$gt:1200}}
+        ]
+        })
+
+    db.cars.aggregate([
+        //stage1
+        {
+            $match:{maker:"Hyundai"}   
+        },
+        //stage2
+        {
+            $count:"total"
+        }
+    
+    ])
+
+    //count the number of diesel and petrol cars for hyundai cars
+    db.cars.aggregate([
+        {$match:{maker:"Hyundai"}},
+        {$group:{_id:"$fuel_type",Totalcars:{$sum:1}}}
+    ])
+//find all the Hyundai cars and only show Maker,Model and Fuel-type details(use $project)
+db.cars.aggregate([
+    {$match:{maker:"Hyundai"}},
+    {$project:{maker:1,model:1,fuel_type:1,_id:0}}
+])
+//sort the above result based on model,use one more stage for that
+
+db.cars.aggregate([
+    {$match:{maker:"Hyundai"}},
+    {$project:{maker:1,model:1,fuel_type:1,_id:0}},
+    {$sort:{model:1}}
+])
+//group the cars by maker and sort based on count(no of cars)
+db.cars.aggregate([
+    {$sortByCount:"$maker"}
+])
+//unwind ->we do have multiple owners for each car(list of documents).now if you want to work on each owner you can use 
+db.cars.aggregate([
+    {$unwind:"$owners"}
+])
+//calculate total service cost of each Hyndai car
+db.cars.aggregate([
+    {
+        $match:{maker:"Hyundai"}
+    },
+    {
+        //sets new field to cars collection
+        $set:{total_cost:{$sum:"$service_history.cost"}}
+    },
+    {
+        $project:{maker:1,model:1,_id:0,total_cost:1}
+    }
+])
+//conditional operators
+// {$cond:[condition,truecase,falsecase]} or we can use if-else
+//if we want to categories cars into petrol cars and non petrol
+db.cars.aggregate([
+    {$project:{
+        _id:0,maker:1,model:1,
+        fuel_category:{
+            $cond:{
+                if:{$eq:["$fuel_type","Petrol"]},
+                    then:"petrol car",
+                else:"non Petrol"
+            }
+        }}
+    }
+])
+
+//switch cases
+//suppose we want to categories the price of the car into multiple categories
+db.cars.aggregate([
+    {$project:{
+        _id:0,maker:1,model:1,
+        priceCategory:{
+            $switch:{
+                branches:[
+                    {case:{$lt:["$price",500000]},
+                        then:"Budget"},
+                    {case:{$and:[{$gte:["$price",500000]},{$lt:["$price",1000000]}]},
+                        then:"midrange"},
+                    {case:{$gte:["$price",2000000]},
+                        then:"Premium"}
+                ],
+                default:"Unknown"
+            }
+        }
+    }}
+])
+//
+db.cars.aggregate([
+    {$project:{_id:0}},
+    {$merge:{into:"newcollection"}}
+])
+//joining using $lookup
+db.users.aggregate([
+    {$lookup:{
+        from:"orders",
+        localField:"_id",
+        foreignField:"user_id",
+        as:"orders"
+    }} 
+])
+
+//db.collcetion.createIndex({age:1}) =>create index with respect to age
+//db.collections.getIndexes()
+//db.collection.dropIndex({age:1})
