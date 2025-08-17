@@ -1,0 +1,3 @@
+this is the added text
+utf8
+this is the file appended

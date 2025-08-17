@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .box {
+      padding: 40px;
+      margin: 10px;
+      border: 3px solid black;
+      font-size: 20px;
+      text-align: center;
+    }
+    #outer { background-color: lightblue; }
+    #middle { background-color: lightgreen; }
+    #inner { background-color: lightcoral; }
+  </style>
+</head>
+<body>
+
+  <div id="outer" class="box">Outer
+    <div id="middle" class="box">Middle
+      <div id="inner" class="box">Inner</div>
+    </div>
+  </div>
+
+  <button onclick="clearLogs()">Clear Logs</button>
+  <ul id="log"></ul>
+
+  <script>
+    const outer = document.getElementById('outer');
+    const middle = document.getElementById('middle');
+    const inner = document.getElementById('inner');
+    const log = document.getElementById('log');
+
+    function logClick(element, phase) {
+      const li = document.createElement('li');
+      li.textContent = `${element} clicked during ${phase}`;
+      log.appendChild(li);
+    }
+
+    // BUBBLING Phase (default)
+    outer.addEventListener('click', () => logClick('Outer', 'bubbling'),false);
+    middle.addEventListener('click', () => logClick('Middle', 'bubbling'),false);
+    inner.addEventListener('click', (e) => {
+      logClick('Inner', 'bubbling');
+      // Uncomment to stop bubbling at inner
+      e.stopPropagation();
+    });
+
+    // CAPTURING Phase
+    outer.addEventListener('click', () => logClick('Outer', 'capturing'),true);
+    middle.addEventListener('click', () => logClick('Middle', 'capturing'),true);
+    inner.addEventListener('click', () => logClick('Inner', 'capturing'),true);
+
+    function clearLogs() {
+      log.innerHTML = '';
+    }
+  </script>
+
+</body>
+</html>
